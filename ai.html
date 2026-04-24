@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Project Assistant</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6;
+            color: #1f2937;
+        }
+        .chat-container {
+            display: flex;
+            flex-direction: column;
+            height: 50vh;
+            max-width: 600px;
+            margin: auto;
+            border-radius: 1rem;<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Project Assistant</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6;
+            color: #1f2937;
+        }
+        .chat-container {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            max-width: 600px;
+            margin: auto;
+            border-radius: 1rem;
+            overflow: hidden;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+        .chat-box {
+            flex-grow: 1;
+            overflow-y: auto;
+            padding: 1.5rem;
+            background-color: #ffffff;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+        .message {
+            max-width: 80%;
+            padding: 0.75rem 1rem;
+            border-radius: 0.75rem;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+        }
+        .user-message {
+            background-color: #e5e7eb;
+            align-self: flex-end;
+            text-align: right;
+        }
+        .ai-message {
+            background-color: #f3f4f6;
+            align-self: flex-start;
+        }
+        .input-area {
+            display: flex;
+            padding: 1rem;
+            background-color: #ffffff;
+            border-top: 1px solid #e5e7eb;
+        }
+        .input-area input {
+            flex-grow: 1;
+            border: 1px solid #d1d5db;
+            border-radius: 0.5rem;
+            padding: 0.75rem 1rem;
+            outline: none;
+        }
+        .input-area button {
+            background-color: #10b981;
+            color: #ffffff;
+            border-radius: 0.5rem;
+            padding: 0.75rem 1.5rem;
+            margin-left: 0.75rem;
+            font-weight: 600;
+            transition: background-color 0.2s;
+        }
+        .input-area button:hover {
+            background-color: #059669;
+        }
+    </style>
+</head>
+<body>
+
+<div class="chat-container">
+    <div class="chat-box" id="chat-box">
+        <div class="ai-message message">Hello! I'm your AI project assistant. Ask me anything about your emissions data project.</div>
+    </div>
+    <div class="input-area">
+        <input type="text" id="user-input" placeholder="Type your question..." autocomplete="off">
+        <button id="send-button">Send</button>
+    </div>
+</div>
+
+<script>
+    const user_input = document.getElementById('user-input');
+    const send_button = document.getElementById('send-button');
+    const chat_box = document.getElementById('chat-box');
+    const apiKey = ""; // Canvas will provide this at runtime.
+
+    const model_name = "gemini-2.5-flash-preview-05-20";
+    const api_url = `https://generativelanguage.googleapis.com/v1beta/models/${model_name}:generateContent?key=${apiKey}`;
+
+    const system_instruction = {
+        role: "system",
+        parts: [
+            { text: `You are a friendly, knowledgeable, and helpful data scientist and machine learning expert. Your purpose is to assist the user with a project on predicting and analyzing carbon emissions. The user has provided two datasets: 'emissions_high_granularity.csv' and 'global-data-on-sustainable-energy (1).csv'. The user has already built a neural network model to predict 'Electricity from fossil fuels (TWh)' using 'Entity' and 'Year' as features. The user has also performed a comparative analysis. When asked, explain the project, the models used (Neural Network, Random Forest, etc.), the data, the methodology (data loading, preprocessing, etc.), and the results in simple terms. Refer to specific columns like 'total_emissions_MtCO2e' and 'Electricity from fossil fuels (TWh)' to be precise. Do not provide code unless asked. Respond conversationally and concisely. Do not mention API or model details. The user's latest prediction results show a strong R-squared score of 0.81, indicating the model is highly accurate. Here is the predicted data for a few countries: United States in 2026: 2855.1 TWh, 2027: 2901.4 TWh, 2028: 2950.8 TWh, 2029: 3010.5 TWh, 2030: 3055.2 TWh. China in 2026: 5210.9 TWh, 2027: 5320.1 TWh, 2028: 5430.7 TWh, 2029: 5550.8 TWh, 2030: 5680.1 TWh.` }
+        ]
+    };
+
+    let chat_history = [system_instruction];
+
+    send_button.addEventListener('click', sendMessage);
+    user_input.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+            sendMessage();
+        }
+    });
+
+    function addMessageToChat(text, sender) {
+        const message_div = document.createElement('div');
+        message_div.textContent = text;
+        message_div.classList.add('message');
+        if (sender === 'user') {
+            message_div.classList.add('user-message');
+        } else {
+            message_div.classList.add('ai-message');
+        }
+        chat_box.appendChild(message_div);
+        chat_box.scrollTop = chat_box.scrollHeight;
+    }
+
+    async function sendMessage() {
+        const user_text = user_input.value.trim();
+        if (user_text === '') return;
+
+        addMessageToChat(user_text, 'user');
+        user_input.value = '';
+        
+        chat_history.push({ role: "user", parts: [{ text: user_text }] });
+
+        try {
+            const response = await fetch(api_url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    contents: chat_history
+                })
+            });
+
+            const result = await response.json();
+            const ai_response_text = result.candidates[0].content.parts[0].text;
+            addMessageToChat(ai_response_text, 'ai');
+            chat_history.push({ role: "model", parts: [{ text: ai_response_text }] });
+
+        } catch (error) {
+            console.error('API Error:', error);
+            addMessageToChat('I am sorry, but I am unable to respond at this time.', 'ai');
+        }
+    }
+</script>
+
+</body>
+</html>
+
+            overflow: hidden;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+        .chat-box {
+            flex-grow: 1;
+            overflow-y: auto;
+            padding: 1.5rem;
+            background-color: #ffffff;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+        .message {
+            max-width: 80%;
+            padding: 0.75rem 1rem;
+            border-radius: 0.75rem;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+        }
+        .user-message {
+            background-color: #e5e7eb;
+            align-self: flex-end;
+            text-align: right;
+        }
+        .ai-message {
+            background-color: #f3f4f6;
+            align-self: flex-start;
+        }
+        .input-area {
+            display: flex;
+            padding: 1rem;
+            background-color: #ffffff;
+            border-top: 1px solid #e5e7eb;
+        }
+        .input-area input {
+            flex-grow: 1;
+            border: 1px solid #d1d5db;
+            border-radius: 0.5rem;
+            padding: 0.75rem 1rem;
+            outline: none;
+        }
+        .input-area button {
+            background-color: #10b981;
+            color: #ffffff;
+            border-radius: 0.5rem;
+            padding: 0.75rem 1.5rem;
+            margin-left: 0.75rem;
+            font-weight: 600;
+            transition: background-color 0.2s;
+        }
+        .input-area button:hover {
+            background-color: #059669;
+        }
+    </style>
+</head>
+<body>
+
+<div class="chat-container">
+    <div class="chat-box" id="chat-box">
+        <div class="ai-message message">Hello! I'm your AI project assistant. Ask me anything about your emissions data project.</div>
+    </div>
+    <div class="input-area">
+        <input type="text" id="user-input" placeholder="Type your question..." autocomplete="off">
+        <button id="send-button">Send</button>
+    </div>
+</div>
+
+<script>
+    const user_input = document.getElementById('user-input');
+    const send_button = document.getElementById('send-button');
+    const chat_box = document.getElementById('chat-box');
+    const apiKey = ""; // Canvas will provide this at runtime.
+
+    const model_name = "gemini-2.5-flash-preview-05-20";
+    const api_url = `https://generativelanguage.googleapis.com/v1beta/models/${model_name}:generateContent?key=${apiKey}`;
+
+    let predictedEmissionsData;
+
+    // Helper function to parse CSV text into a structured array of objects
+    function parseCsv(text) {
+        const lines = text.trim().split('\n');
+        const headers = lines[0].split(',').map(header => header.trim());
+        const data = lines.slice(1).map(line => {
+            const values = line.split(',');
+            return headers.reduce((obj, header, index) => {
+                obj[header] = values[index].trim();
+                return obj;
+            }, {});
+        });
+        return data;
+    }
+
+    // Fetch and load the CSV data
+    async function loadPredictedData() {
+        try {
+            const response = await fetch('predicted_emissions.csv');
+            if (!response.ok) {
+                throw new Error(`Failed to load CSV: ${response.statusText}`);
+            }
+            const csvText = await response.text();
+            predictedEmissionsData = parseCsv(csvText);
+            console.log("Predicted data loaded successfully:", predictedEmissionsData);
+            addMessageToChat("The predicted emissions data has been loaded. I can now answer questions about your forecasts.", 'ai');
+        } catch (error) {
+            console.error("Error loading predicted data:", error);
+            addMessageToChat('Warning: Unable to load predicted emissions data. The bot\'s answers may be less detailed.', 'ai');
+        }
+    }
+
+    const system_instruction = {
+        role: "system",
+        parts: [
+            { text: "You are a friendly, knowledgeable, and helpful data scientist and machine learning expert. Your purpose is to assist the user with a project on predicting and analyzing carbon emissions. The user has provided two datasets: 'emissions_high_granularity.csv' and 'global-data-on-sustainable-energy (1).csv'. The user has already built a neural network model to predict 'Electricity from fossil fuels (TWh)' using 'Entity' and 'Year' as features. The user has also performed a comparative analysis. When asked, explain the project, the models used (Neural Network, Random Forest, etc.), the data, the methodology (data loading, preprocessing, etc.), and the results in simple terms. Refer to specific columns like 'total_emissions_MtCO2e' and 'Electricity from fossil fuels (TWh)' to be precise. Do not provide code unless asked. Respond conversationally and concisely. Do not mention API or model details. The user's latest prediction results show a strong R-squared score of 0.81, indicating the model is highly accurate. You also have access to a variable named 'predictedEmissionsData' which is a JSON array containing forecasted data for 2026-2040 for various countries. You can refer to this data to answer questions about future predictions." }
+        ]
+    };
+
+    let chat_history = [system_instruction];
+
+    send_button.addEventListener('click', sendMessage);
+    user_input.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+            sendMessage();
+        }
+    });
+
+    function addMessageToChat(text, sender) {
+        const message_div = document.createElement('div');
+        message_div.textContent = text;
+        message_div.classList.add('message');
+        if (sender === 'user') {
+            message_div.classList.add('user-message');
+        } else {
+            message_div.classList.add('ai-message');
+        }
+        chat_box.appendChild(message_div);
+        chat_box.scrollTop = chat_box.scrollHeight;
+    }
+
+    async function sendMessage() {
+        const user_text = user_input.value.trim();
+        if (user_text === '') return;
+
+        addMessageToChat(user_text, 'user');
+        user_input.value = '';
+        
+        chat_history.push({ role: "user", parts: [{ text: user_text }] });
+
+        try {
+            const response = await fetch(api_url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    contents: chat_history
+                })
+            });
+
+            const result = await response.json();
+            const ai_response_text = result.candidates[0].content.parts[0].text;
+            addMessageToChat(ai_response_text, 'ai');
+            chat_history.push({ role: "model", parts: [{ text: ai_response_text }] });
+
+        } catch (error) {
+            console.error('API Error:', error);
+            addMessageToChat('I am sorry, but I am unable to respond at this time.', 'ai');
+        }
+    }
+
+    // Call the function to load data when the page loads
+    window.onload = loadPredictedData;
+</script>
+
+</body>
+</html>
